@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My React DataTable - Live Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            
+            --surface-primary: #ffffff;
+            --surface-secondary: #f7fafc;
+            --surface-elevated: #ffffff;
+            
+            --border-light: rgba(226, 232, 240, 0.8);
+            --border-medium: rgba(203, 213, 224, 0.6);
+            
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            
+            --surface-primary: #1a202c;
+            --surface-secondary: #2d3748;
+            --surface-elevated: #2d3748;
+            
+            --border-light: rgba(74, 85, 104, 0.3);
+            --border-medium: rgba(113, 128, 150, 0.2);
+            
+            --glass-bg: rgba(0, 0, 0, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+        }
+
+        .app-container {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23667eea' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Header */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* DataTable Container */
+        .datatable-container {
+            background: var(--surface-elevated);
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        .datatable-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .datatable-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .datatable-title i {
+            color: #667eea;
+        }
+
+        .filters-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            position: relative;
+        }
+
+        .filter-input, .filter-select {
+            background: var(--surface-primary);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 200px;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .filter-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Table Styles */
+        .datatable {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .datatable th {
+            background: var(--surface-secondary);
+            padding: 1.5rem 1.25rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .datatable th:hover {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .datatable th.sortable::after {
+            content: '\f0dc';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 1rem;
+            opacity: 0.3;
+            transition: all 0.2s ease;
+        }
+
+        .datatable th.sorted-asc::after {
+            content: '\f0de';
+            opacity: 1;
+            color: #667eea;
+        }
+
+        .datatable th.sorted-desc::after {
+            content: '\f0dd';
+            opacity: 1;
+            color: #667eea;
+        }
+
+        .datatable td {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+            transition: all 0.2s ease;
+        }
+
+        .datatable tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .datatable tbody tr:hover {
+            background: var(--surface-secondary);
+            transform: scale(1.001);
+        }
+
+        .datatable tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Avatar */
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Employee Info */
+        .employee-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .employee-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+        }
+
+        .badge:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .badge-admin {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            color: #d63031;
+        }
+
+        .badge-moderator {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .badge-user {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+        }
+
+        .badge-active {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+        }
+
+        .badge-inactive {
+            background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+            color: white;
+        }
+
+        /* Salary */
+        .salary {
+            font-weight: 700;
+            font-size: 1rem;
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            background: var(--surface-secondary);
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pagination-btn {
+            background: var(--surface-primary);
+            border: 2px solid var(--border-light);
+            color: var(--text-primary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            padding: 0.75rem 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Features Section */
+        .features-section {
+            margin-top: 4rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .features-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--surface-elevated);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-light);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .main-content {
+                padding: 2rem 1rem;
+            }
+            
+            .header-content {
+                padding: 0 1rem;
+            }
+            
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-input, .filter-select {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .pagination-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .datatable-container {
+                overflow-x: auto;
+            }
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading my DataTable demo...</p>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext } = React;
+
+        // Enhanced Database with more professional data
+        const DATABASE = [
+            {
+                id: 1,
+                name: 'Arjun Sharma',
+                email: 'arjun.sharma@techcorp.com',
+                age: 29,
+                role: 'admin',
+                department: 'Engineering',
+                salary: 125000,
+                joinDate: '2021-03-15',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun'
+            },
+            {
+                id: 2,
+                name: 'Maria Rodriguez',
+                email: 'maria.rodriguez@techcorp.com',
+                age: 31,
+                role: 'user',
+                department: 'Marketing',
+                salary: 85000,
+                joinDate: '2022-01-10',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria'
+            },
+            {
+                id: 3,
+                name: 'Priya Patel',
+                email: 'priya.patel@techcorp.com',
+                age: 26,
+                role: 'user',
+                department: 'Design',
+                salary: 95000,
+                joinDate: '2022-08-22',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya'
+            },
+            {
+                id: 4,
+                name: 'James Chen',
+                email: 'james.chen@techcorp.com',
+                age: 33,
+                role: 'moderator',
+                department: 'Engineering',
+                salary: 110000,
+                joinDate: '2020-11-05',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James'
+            },
+            {
+                id: 5,
+                name: 'Ananya Gupta',
+                email: 'ananya.gupta@techcorp.com',
+                age: 28,
+                role: 'admin',
+                department: 'Engineering',
+                salary: 130000,
+                joinDate: '2021-05-12',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya'
+            },
+            {
+                id: 6,
+                name: 'Ahmed Hassan',
+                email: 'ahmed.hassan@techcorp.com',
+                age: 30,
+                role: 'user',
+                department: 'Marketing',
+                salary: 78000,
+                joinDate: '2022-09-18',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed'
+            },
+            {
+                id: 7,
+                name: 'Vikram Singh',
+                email: 'vikram.singh@techcorp.com',
+                age: 35,
+                role: 'moderator',
+                department: 'HR',
+                salary: 92000,
+                joinDate: '2019-07-20',
+                active: false,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram'
+            },
+            {
+                id: 8,
+                name: 'Emma Thompson',
+                email: 'emma.thompson@techcorp.com',
+                age: 27,
+                role: 'user',
+                department: 'Design',
+                salary: 88000,
+                joinDate: '2023-02-14',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma'
+            },
+            {
+                id: 9,
+                name: 'Rajesh Kumar',
+                email: 'rajesh.kumar@techcorp.com',
+                age: 32,
+                role: 'admin',
+                department: 'Engineering',
+                salary: 135000,
+                joinDate: '2020-04-08',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh'
+            },
+            {
+                id: 10,
+                name: 'Sofia Petrov',
+                email: 'sofia.petrov@techcorp.com',
+                age: 29,
+                role: 'user',
+                department: 'Marketing',
+                salary: 82000,
+                joinDate: '2021-12-03',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia'
+            },
+            {
+                id: 11,
+                name: 'Deepika Reddy',
+                email: 'deepika.reddy@techcorp.com',
+                age: 31,
+                role: 'moderator',
+                department: 'Design',
+                salary: 105000,
+                joinDate: '2021-09-15',
+                active: true,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Deepika'
+            },
+            {
+                id: 12,
+                name: 'Oliver Williams',
+                email: 'oliver.williams@techcorp.com',
+                age: 28,
+                role: 'user',
+                department: 'HR',
+                salary: 75000,
+                joinDate: '2022-11-20',
+                active: false,
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver'
+            }
+        ];
+
+        // Theme Context
+        const ThemeContext = createContext();
+
+        function ThemeProvider({ children }) {
+            const [theme, setTheme] = useState(() => {
+                return localStorage.getItem('theme') || 'light';
+            });
+
+            const toggleTheme = () => {
+                const newTheme = theme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+                document.documentElement.setAttribute('data-theme', newTheme);
+            };
+
+            useEffect(() => {
+                document.documentElement.setAttribute('data-theme', theme);
+            }, [theme]);
+
+            return (
+                <ThemeContext.Provider value={{ theme, toggleTheme }}>
+                    {children}
+                </ThemeContext.Provider>
+            );
+        }
+
+        function useTheme() {
+            return useContext(ThemeContext);
+        }
+
+        // Professional DataTable Component
+        function DataTable({ data, pageSize = 5 }) {
+            const [currentPage, setCurrentPage] = useState(1);
+            const [sortField, setSortField] = useState('');
+            const [sortDirection, setSortDirection] = useState('asc');
+            const [filters, setFilters] = useState({});
+
+            // Filter data
+            let filteredData = data.filter(item => {
+                return Object.entries(filters).every(([key, value]) => {
+                    if (!value) return true;
+                    return String(item[key]).toLowerCase().includes(String(value).toLowerCase());
+                });
+            });
+
+            // Sort data
+            if (sortField) {
+                filteredData.sort((a, b) => {
+                    let aVal = a[sortField];
+                    let bVal = b[sortField];
+                    
+                    if (typeof aVal === 'string') {
+                        aVal = aVal.toLowerCase();
+                        bVal = bVal.toLowerCase();
+                    }
+                    
+                    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            // Paginate data
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
+
+            const handleSort = (field) => {
+                if (sortField === field) {
+                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                } else {
+                    setSortField(field);
+                    setSortDirection('asc');
+                }
+            };
+
+            const handleFilter = (field, value) => {
+                setFilters(prev => ({ ...prev, [field]: value }));
+                setCurrentPage(1);
+            };
+
+            const getSortClass = (field) => {
+                if (sortField !== field) return 'sortable';
+                return sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
+            };
+
+            const getRoleBadge = (role) => {
+                const roleConfig = {
+                    admin: { class: 'badge-admin', icon: 'fas fa-crown' },
+                    moderator: { class: 'badge-moderator', icon: 'fas fa-shield-alt' },
+                    user: { class: 'badge-user', icon: 'fas fa-user' }
+                };
+                
+                const config = roleConfig[role];
+                
+                return (
+                    <span className={`badge ${config.class}`}>
+                        <i className={config.icon}></i>
+                        {role}
+                    </span>
+                );
+            };
+
+            const getStatusBadge = (active) => (
+                <span className={`badge ${active ? 'badge-active' : 'badge-inactive'}`}>
+                    <i className={`fas ${active ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
+                    {active ? 'Active' : 'Inactive'}
+                </span>
+            );
+
+            return (
+                <div className="datatable-container">
+                    <div className="datatable-header">
+                        <h2 className="datatable-title">
+                            <i className="fas fa-users"></i>
+                            Employee Directory
+                            <span style={{ 
+                                fontSize: '0.875rem', 
+                                fontWeight: '500', 
+                                color: 'var(--text-muted)',
+                                marginLeft: '0.5rem'
+                            }}>
+                                ({filteredData.length} records)
+                            </span>
+                        </h2>
+                        <div className="filters-container">
+                            <div className="filter-group">
+                                <input
+                                    type="text"
+                                    placeholder="🔍 Search employees..."
+                                    className="filter-input"
+                                    onChange={(e) => handleFilter('name', e.target.value)}
+                                />
+                            </div>
+                            <div className="filter-group">
+                                <select
+                                    className="filter-select"
+                                    onChange={(e) => handleFilter('department', e.target.value)}
+                                >
+                                    <option value="">🏢 All Departments</option>
+                                    <option value="Engineering">⚙️ Engineering</option>
+                                    <option value="Marketing">📈 Marketing</option>
+                                    <option value="Design">🎨 Design</option>
+                                    <option value="HR">👥 HR</option>
+                                </select>
+                            </div>
+                            <div className="filter-group">
+                                <select
+                                    className="filter-select"
+                                    onChange={(e) => handleFilter('role', e.target.value)}
+                                >
+                                    <option value="">👤 All Roles</option>
+                                    <option value="admin">👑 Admin</option>
+                                    <option value="user">👤 User</option>
+                                    <option value="moderator">🛡️ Moderator</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table className="datatable">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th className={getSortClass('name')} onClick={() => handleSort('name')}>
+                                    Name
+                                </th>
+                                <th className={getSortClass('age')} onClick={() => handleSort('age')}>
+                                    Age
+                                </th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th className={getSortClass('salary')} onClick={() => handleSort('salary')}>
+                                    Salary
+                                </th>
+                                <th className={getSortClass('joinDate')} onClick={() => handleSort('joinDate')}>
+                                    Join Date
+                                </th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginatedData.map(employee => (
+                                <tr key={employee.id}>
+                                    <td>
+                                        <img
+                                            src={employee.avatar}
+                                            alt={employee.name}
+                                            className="avatar"
+                                        />
+                                    </td>
+                                    <td>
+                                        <div className="employee-info">
+                                            <div className="employee-name">{employee.name}</div>
+                                            <div className="employee-email">{employee.email}</div>
+                                        </div>
+                                    </td>
+                                    <td>{employee.age}</td>
+                                    <td>{getRoleBadge(employee.role)}</td>
+                                    <td>{employee.department}</td>
+                                    <td>
+                                        <span className="salary">
+                                            ${employee.salary.toLocaleString()}
+                                        </span>
+                                    </td>
+                                    <td>{new Date(employee.joinDate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    })}</td>
+                                    <td>{getStatusBadge(employee.active)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    
+                    <div className="pagination-container">
+                        <div className="pagination-info">
+                            Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredData.length)} of {filteredData.length} employees
+                        </div>
+                        <div className="pagination-controls">
+                            <button
+                                className="pagination-btn"
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <i className="fas fa-chevron-left"></i>
+                                Previous
+                            </button>
+                            <div className="page-indicator">
+                                Page {currentPage} of {totalPages}
+                            </div>
+                            <button
+                                className="pagination-btn"
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                                <i className="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const { theme, toggleTheme } = useTheme();
+
+            const stats = [
+                { number: DATABASE.length, label: 'Total Employees' },
+                { number: [...new Set(DATABASE.map(e => e.department))].length, label: 'Departments' },
+                { number: DATABASE.filter(e => e.active).length, label: 'Active Users' },
+                { number: `$${Math.round(DATABASE.reduce((sum, e) => sum + e.salary, 0) / DATABASE.length / 1000)}K`, label: 'Avg Salary' }
+            ];
+
+            const features = [
+                {
+                    icon: 'fas fa-sort',
+                    title: 'Sorting',
+                    description: 'Click any column header to sort. Works with text, numbers, and dates automatically.'
+                },
+                {
+                    icon: 'fas fa-filter',
+                    title: 'Filtering',
+                    description: 'Search through data with text inputs and dropdown filters. Pretty fast even with lots of rows.'
+                },
+                {
+                    icon: 'fas fa-mobile-alt',
+                    title: 'Mobile Friendly',
+                    description: 'Works on phones and tablets. Had to make sure it looked good everywhere.'
+                },
+                {
+                    icon: 'fas fa-palette',
+                    title: 'Dark Mode',
+                    description: 'Light and dark themes because everyone loves dark mode. Saves to localStorage too.'
+                },
+                {
+                    icon: 'fas fa-rocket',
+                    title: 'Fast',
+                    description: 'Handles large datasets pretty well. Uses pagination so it doesn\'t get slow.'
+                },
+                {
+                    icon: 'fas fa-code',
+                    title: 'TypeScript',
+                    description: 'Fully typed with TypeScript. No more guessing what props to pass.'
+                }
+            ];
+
+            return (
+                <div className="app-container">
+                    <div className="bg-animation"></div>
+                    
+                    <header className="header">
+                        <div className="header-content">
+                            <div className="logo">
+                                <i className="fas fa-table"></i>
+                                My DataTable
+                            </div>
+                            <div className="header-actions">
+                                <button className="theme-toggle" onClick={toggleTheme}>
+                                    <i className={`fas ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
+                                    {theme === 'light' ? 'Dark' : 'Light'} Mode
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="main-content">
+                        <section className="hero-section">
+                            <h1 className="hero-title">React DataTable Component</h1>
+                        </section>
+
+                        <div className="stats-grid">
+                            {stats.map((stat, index) => (
+                                <div key={index} className="stat-card">
+                                    <div className="stat-number">{stat.number}</div>
+                                    <div className="stat-label">{stat.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <DataTable data={DATABASE} pageSize={6} />
+
+                        <section className="features-section">
+                            <h2 className="features-title">What it can do</h2>
+                            <div className="features-grid">
+                                {features.map((feature, index) => (
+                                    <div key={index} className="feature-card">
+                                        <div className="feature-icon">
+                                            <i className={feature.icon}></i>
+                                        </div>
+                                        <h3 className="feature-title">{feature.title}</h3>
+                                        <p className="feature-description">{feature.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            );
+        }
+
+        function Root() {
+            return (
+                <ThemeProvider>
+                    <App />
+                </ThemeProvider>
+            );
+        }
+
+        ReactDOM.render(<Root />, document.getElementById('root'));
+    </script>
+</body>
+</html> 
