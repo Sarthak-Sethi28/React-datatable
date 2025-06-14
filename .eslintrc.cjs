@@ -5,10 +5,7 @@ module.exports = {
     jest: true,
   },
   extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
+    'eslint:recommended'
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -18,15 +15,9 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: 'module',
   },
-  plugins: ['react', '@typescript-eslint'],
+  plugins: ['@typescript-eslint'],
   rules: {
-    'react/react-in-jsx-scope': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
   },
 }; 

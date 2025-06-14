@@ -2,6 +2,7 @@
   "name": "react-advanced-datatable",
   "version": "1.0.0",
   "description": "A powerful, customizable React DataTable component with sorting, filtering, pagination, and theming",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

@@ -27,6 +27,14 @@ export default [
       resolve(),
       commonjs(),
       typescript({ tsconfig: './tsconfig.json' }),
+      {
+        name: 'css',
+        load(id) {
+          if (id.endsWith('.css')) {
+            return `export default ${JSON.stringify('')};`;
+          }
+        }
+      }
     ],
   },
   {
